@@ -27,7 +27,7 @@ Understanding magma ascent processes helps us:
 - **Fluid Degassed (D):** Fraction losing volatiles through open-system degassing
 - **Fluid to Pile (P):** Fraction trapped in cumulate pile
 - **Volatile content:** H₂O (1-6 wt%), CO₂ (0-0.5 wt%)
-- **Initial storage depth:** 2500-4000 bars
+- **Initial storage depth:** 1000 - 4000 bars
 
 ## Key Findings
 [To be updated as analysis progresses]
