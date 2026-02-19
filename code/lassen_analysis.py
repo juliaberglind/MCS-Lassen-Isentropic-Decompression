@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 def load_run_data(run_name):
     path = f'../Runs/Lassen_{run_name}.XLSX'
@@ -33,8 +34,8 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4):
         'Melt CO2 wt%'
     ]
 
-    run_colors = ['darkred', 'darkblue', 'darkgreen', 'purple', 'orange',
-                  'brown', 'crimson', 'navy', 'teal', 'magenta']
+    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
+                  'pink', 'lime', 'dodgerblue']
 
     nrows = (len(oxides) + ncols - 1) // ncols
     fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
@@ -60,13 +61,13 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4):
 
     fig.suptitle('Oxide Evolution', fontsize=16, fontweight='bold', y=0.995)
     plt.tight_layout()
-    plt.show()
+    return fig
 
 def plot_temperature_vs_pressure(df_list, run_names):
-    run_colors = ['darkred', 'darkblue', 'darkgreen', 'purple', 'orange',
-                  'brown', 'crimson', 'navy', 'teal', 'magenta']
+    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
+                  'pink', 'lime', 'dodgerblue']
 
-    plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(8, 6))
 
     for df, run_name, color in zip(df_list, run_names, run_colors):
         plt.plot(df['Temperature (deg C)'], df['Pressure (bars)'],
@@ -80,13 +81,12 @@ def plot_temperature_vs_pressure(df_list, run_names):
     plt.grid(True, alpha=0.3, linestyle='--')
     plt.legend(fontsize=10)
     plt.tight_layout()
-    plt.show()
+    return fig
 
 def plot_fluid_mass(df_list, run_names):
 
-    run_colors = ['darkred', 'darkblue', 'darkgreen', 'purple', 'orange',
-                  'brown', 'crimson', 'navy', 'teal', 'magenta']
-
+    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
+                  'pink', 'lime', 'dodgerblue']
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
     for df, run_name, color in zip(df_list, run_names, run_colors):
@@ -114,4 +114,33 @@ def plot_fluid_mass(df_list, run_names):
 
     fig.suptitle('Fluid Mass Evolution', fontsize=16, fontweight='bold', y=1.00)
     plt.tight_layout()
-    plt.show()
+    return fig
+
+def plot_pressure_crystallinity(df_list, run_names):
+    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
+                  'pink', 'lime', 'dodgerblue']
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color in zip(df_list, run_names, run_colors):
+        plt.plot(df['Solids Mass (m.u.)'], df['Pressure (bars)'],
+                 linewidth=2, color=color, marker='o', markersize=4,
+                 alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('Solids Mass (m.u.)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('Crystallinity vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+
+
+def save_fig(fig, file_name, path='../figures'):
+    if not file_name.endswith('.png'):
+        file_name += '.png'
+    os.makedirs(path, exist_ok=True)
+    full_path = os.path.join(path, file_name)
+    fig.savefig(full_path, dpi=300)
