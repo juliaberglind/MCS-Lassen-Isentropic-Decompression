@@ -144,3 +144,43 @@ def save_fig(fig, file_name, path='../figures'):
     os.makedirs(path, exist_ok=True)
     full_path = os.path.join(path, file_name)
     fig.savefig(full_path, dpi=300)
+
+
+def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
+    oxides = [
+        'Melt SiO2 wt%', 'Melt TiO2 wt%', 'Melt Al2O3 wt%',
+        'Melt Fe2O3 wt%', 'Melt Cr2O3 wt%', 'Melt FeO wt%',
+        'Melt MnO wt%', 'Melt MgO wt%', 'Melt NiO wt%',
+        'Melt CoO wt%', 'Melt CaO wt%', 'Melt Na2O wt%',
+        'Melt K2O wt%', 'Melt P2O5 wt%', 'Melt H2O wt%',
+        'Melt CO2 wt%'
+    ]
+
+    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
+                  'pink', 'lime', 'dodgerblue']
+
+    nrows = (len(oxides) + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
+    axes = axes.flatten()
+
+    for i, oxide in enumerate(oxides):
+        for df, run_name, color in zip(df_list, run_names, run_colors):
+            if oxide in df.columns:
+                axes[i].plot(df[oxide], df['Melt SiO2 wt%'],
+                            linewidth=2, color=color, marker='o',
+                            markersize=3, alpha=0.7, label=run_name)
+
+        axes[i].invert_yaxis()
+        oxide_name = oxide.replace('Melt ', '').replace(' wt%', '')
+        axes[i].set_xlabel(f'{oxide_name} (wt%)', fontsize=11)
+        axes[i].set_ylabel('Silica (wt%)', fontsize=11)
+        axes[i].set_title(oxide_name, fontsize=12, fontweight='bold')
+        axes[i].grid(True, alpha=0.3, linestyle='--')
+        axes[i].legend(fontsize=8, loc='best')
+
+    for i in range(len(oxides), len(axes)):
+        axes[i].axis('off')
+
+    fig.suptitle('Oxide vs. Silica Evolution', fontsize=16, fontweight='bold', y=0.995)
+    plt.tight_layout()
+    return fig
