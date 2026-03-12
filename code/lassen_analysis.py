@@ -24,15 +24,28 @@ def clean_settp_duplicates(df):
 
     return df_cleaned
 
-def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4):
-    oxides = [
+def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
+    
+    if anhydrous:
+        df_list = [add_anhydrous_columns(df) for df in df_list]
+        oxides = [
+            'Melt SiO2_anhy wt%', 'Melt TiO2_anhy wt%', 'Melt Al2O3_anhy wt%',
+            'Melt Fe2O3_anhy wt%', 'Melt Cr2O3_anhy wt%', 'Melt FeO_anhy wt%',
+            'Melt MnO_anhy wt%', 'Melt MgO_anhy wt%', 'Melt NiO_anhy wt%',
+            'Melt CoO_anhy wt%', 'Melt CaO_anhy wt%', 'Melt Na2O_anhy wt%',
+            'Melt K2O_anhy wt%', 'Melt P2O5_anhy wt%', 'Melt H2O wt%'
+        ]
+        title = 'Anhydrous Oxide Evolution'
+    else:
+        oxides = [
         'Melt SiO2 wt%', 'Melt TiO2 wt%', 'Melt Al2O3 wt%',
         'Melt Fe2O3 wt%', 'Melt Cr2O3 wt%', 'Melt FeO wt%',
         'Melt MnO wt%', 'Melt MgO wt%', 'Melt NiO wt%',
         'Melt CoO wt%', 'Melt CaO wt%', 'Melt Na2O wt%',
         'Melt K2O wt%', 'Melt P2O5 wt%', 'Melt H2O wt%',
-        'Melt CO2 wt%'
-    ]
+        'Melt CO2 wt%']
+
+        title = 'Oxide Evolution'
 
     run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
                   'pink', 'lime', 'dodgerblue']
@@ -59,7 +72,7 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4):
     for i in range(len(oxides), len(axes)):
         axes[i].axis('off')
 
-    fig.suptitle('Oxide Evolution', fontsize=16, fontweight='bold', y=0.995)
+    fig.suptitle(title, fontsize=16, fontweight='bold', y=0.995)
     plt.tight_layout()
     return fig
 
@@ -184,3 +197,59 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
     fig.suptitle('Oxide vs. Silica Evolution', fontsize=16, fontweight='bold', y=0.995)
     plt.tight_layout()
     return fig
+
+def add_anhydrous_columns(df):
+    oxides = [
+        'Melt SiO2 wt%', 'Melt TiO2 wt%', 'Melt Al2O3 wt%',
+        'Melt Fe2O3 wt%', 'Melt Cr2O3 wt%', 'Melt FeO wt%',
+        'Melt MnO wt%', 'Melt MgO wt%', 'Melt NiO wt%',
+        'Melt CoO wt%', 'Melt CaO wt%', 'Melt Na2O wt%',
+        'Melt K2O wt%', 'Melt P2O5 wt%'
+    ]
+    volatile_cols = ['Melt H2O wt%', 'Melt CO2 wt%']
+
+    present_oxides = [col for col in oxides if col in df.columns]
+
+    anhydrous_sum = df[present_oxides].sum(axis=1)
+
+    df = df.copy()
+    for col in present_oxides:
+        anhy_col = col.replace(' wt%', '_anhy wt%')
+        df[anhy_col] = (df[col] / anhydrous_sum) * 100
+
+    return df
+
+
+def plot_solids_mass(df_list, run_names):
+
+    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
+                  'pink', 'lime', 'dodgerblue']
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    for df, run_name, color in zip(df_list, run_names, run_colors):
+        axes[0].plot(df['Temperature (deg C)'], df['Solids Mass (m.u.)'],
+                     linewidth=2, color=color, marker='o', markersize=4,
+                     alpha=0.7, label=run_name)
+
+    axes[0].set_xlabel('Temperature (°C)', fontsize=12)
+    axes[0].set_ylabel('Solid Mass (m.u.)', fontsize=12)
+    axes[0].set_title('Solid Mass vs Temperature', fontsize=14, fontweight='bold')
+    axes[0].grid(True, alpha=0.3, linestyle='--')
+    axes[0].legend(fontsize=10)
+
+    for df, run_name, color in zip(df_list, run_names, run_colors):
+        axes[1].plot(df['Solids Mass (m.u.)'], df['Pressure (bars)'],
+                     linewidth=2, color=color, marker='o', markersize=4,
+                     alpha=0.7, label=run_name)
+
+    axes[1].invert_yaxis()
+    axes[1].set_xlabel('Solid Mass (m.u.)', fontsize=12)
+    axes[1].set_ylabel('Pressure (bars)', fontsize=12)
+    axes[1].set_title('Solid Mass vs Pressure', fontsize=14, fontweight='bold')
+    axes[1].grid(True, alpha=0.3, linestyle='--')
+    axes[1].legend(fontsize=10)
+
+    fig.suptitle('Solid Mass Evolution', fontsize=16, fontweight='bold', y=1.00)
+    plt.tight_layout()
+    return fig
+
