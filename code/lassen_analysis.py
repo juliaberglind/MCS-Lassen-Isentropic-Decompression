@@ -131,8 +131,7 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
         ]
         title = 'Oxide Evolution'
 
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
 
     # Calculate grid dimensions from number of oxides
     nrows = (len(oxides) + ncols - 1) // ncols
@@ -177,8 +176,7 @@ def plot_temperature_vs_pressure(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
 
     fig = plt.figure(figsize=(8, 6))
 
@@ -211,8 +209,7 @@ def plot_fluid_mass(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
@@ -259,8 +256,7 @@ def plot_pressure_crystallinity(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
 
     fig = plt.figure(figsize=(8, 6))
 
@@ -324,8 +320,7 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
         'Melt CO2 wt%'
     ]
 
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
 
     # Calculate grid dimensions from number of oxides
     nrows = (len(oxides) + ncols - 1) // ncols
@@ -371,8 +366,7 @@ def plot_solids_mass(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
@@ -410,9 +404,9 @@ def plot_solids_mass(df_list, run_names):
 # ============================================================
 def parse_melts_out(filepath):
     """
-    Parses a MELTS.out file and extracts temperature, pressure, and feldspar
-    end-member compositions for each pressure step. Rows without feldspar present
-    will have NaN for feldspar columns.
+    Parses a MELTS .out file and extracts temperature, pressure, feldspar
+    end-member compositions, and fluid volume fraction for each pressure step.
+    Rows without feldspar or fluid present will have NaN for those columns.
 
     Args:
         filepath (str): Path to the MELTS .out file.
@@ -421,7 +415,8 @@ def parse_melts_out(filepath):
         df (DataFrame): One row per pressure step with columns:
                         'Temperature (deg C)', 'Pressure (kbars)', 'Pressure (bars)',
                         'Feldspar Albite (mol%)', 'Feldspar Anorthite (mol%)',
-                        'Feldspar Sanidine (mol%)'
+                        'Feldspar Sanidine (mol%)', 'Fluid Volume (cc)',
+                        'System Volume (cc)', 'Fluid Volume Fraction'
     """
     import re
 
@@ -443,7 +438,7 @@ def parse_melts_out(filepath):
         P_kbar = float(tp_match.group(2))
         P_bar = P_kbar * 1000  # convert to bars to match xlsx DataFrames
 
-        # Extract feldspar end-members — will be None if feldspar is not a stable phase
+        # Extract feldspar end-members -- will be None if feldspar is not a stable phase
         albite = None
         anorthite = None
         sanidine = None
@@ -456,6 +451,21 @@ def parse_melts_out(filepath):
             anorthite = float(feldspar_match.group(2))
             sanidine = float(feldspar_match.group(3))
 
+        # Extract fluid volume if fluid is a stable phase
+        fluid_V = None
+        fluid_match = re.search(r'fluid\s+mass.*?V\s*=\s*([\d.]+)\s*\(cc\)', block, re.DOTALL)
+        if fluid_match:
+            fluid_V = float(fluid_match.group(1))
+
+        # Extract system volume
+        system_V = None
+        system_match = re.search(r'System\s+mass.*?V\s*=\s*([\d.]+)\s*\(cc\)', block, re.DOTALL)
+        if system_match:
+            system_V = float(system_match.group(1))
+
+        # Calculate fluid volume fraction -- None if fluid is not a stable phase
+        fluid_vol_fraction = (fluid_V / system_V) if (fluid_V is not None and system_V is not None) else None
+
         records.append({
             'Temperature (deg C)': T,
             'Pressure (kbars)': P_kbar,
@@ -463,13 +473,15 @@ def parse_melts_out(filepath):
             'Feldspar Albite (mol%)': albite,
             'Feldspar Anorthite (mol%)': anorthite,
             'Feldspar Sanidine (mol%)': sanidine,
+            'Fluid Volume (cc)': fluid_V,
+            'System Volume (cc)': system_V,
+            'Fluid Volume Fraction': fluid_vol_fraction,
         })
 
     df = pd.DataFrame(records)
     # Drop duplicate pressure steps, keeping the last
     df = df.drop_duplicates(subset='Pressure (bars)', keep='last').reset_index(drop=True)
     return df
-
 # ============================================================
 # function to load melts.out
 # ============================================================
@@ -518,6 +530,40 @@ def plot_anorthite_vs_pressure(df_list, run_names):
     plt.xlabel('Anorthite (mol%)', fontsize=12)
     plt.ylabel('Pressure (bars)', fontsize=12)
     plt.title('Feldspar Anorthite vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+
+
+def plot_fluid_volume_fraction(df_list, run_names):
+    """
+    Plots fluid volume fraction vs pressure for one or more runs.
+    Only plots steps where fluid is a stable phase (below ~1500 bars).
+
+    Args:
+        df_list (list of DataFrame): List of DataFrames from load_melts_out.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_styles = [(1, 0), (5, 2), (5, 2, 1, 2), (1, 2)]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        df_fluid = df.dropna(subset=['Fluid Volume Fraction'])
+        plt.plot(df_fluid['Fluid Volume Fraction'], df_fluid['Pressure (bars)'],
+                 linewidth=2, color=color, dashes=style,
+                 marker='o', markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('Fluid Volume Fraction', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('Fluid Volume Fraction vs Pressure', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3, linestyle='--')
     plt.legend(fontsize=10)
     plt.tight_layout()
