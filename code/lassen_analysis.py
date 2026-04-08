@@ -131,7 +131,26 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
         ]
         title = 'Oxide Evolution'
 
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     # Calculate grid dimensions from number of oxides
     nrows = (len(oxides) + ncols - 1) // ncols
@@ -139,10 +158,10 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
     axes = axes.flatten()
 
     for i, oxide in enumerate(oxides):
-        for df, run_name, color in zip(df_list, run_names, run_colors):
+        for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
             if oxide in df.columns:
                 axes[i].plot(df[oxide], df['Pressure (bars)'],
-                            linewidth=2, color=color, marker='o',
+                            linewidth=2, color=color, linestyle=style, marker='o',
                             markersize=3, alpha=0.7, label=run_name)
 
         axes[i].invert_yaxis()
@@ -176,13 +195,31 @@ def plot_temperature_vs_pressure(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     fig = plt.figure(figsize=(8, 6))
 
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         plt.plot(df['Temperature (deg C)'], df['Pressure (bars)'],
-                 linewidth=2, color=color, marker='o', markersize=4,
+                 linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                  alpha=0.7, label=run_name)
 
     plt.gca().invert_yaxis()
@@ -209,14 +246,33 @@ def plot_fluid_mass(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
     # Left panel: fluid mass vs temperature
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[0].plot(df['Temperature (deg C)'], df['fluid Mass (m.u.)'],
-                     linewidth=2, color=color, marker='o', markersize=4,
+                     linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                      alpha=0.7, label=run_name)
 
     axes[0].set_xlabel('Temperature (°C)', fontsize=12)
@@ -226,9 +282,9 @@ def plot_fluid_mass(df_list, run_names):
     axes[0].legend(fontsize=10)
 
     # Right panel: fluid mass vs pressure
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[1].plot(df['fluid Mass (m.u.)'], df['Pressure (bars)'],
-                     linewidth=2, color=color, marker='o', markersize=4,
+                     linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                      alpha=0.7, label=run_name)
 
     axes[1].invert_yaxis()
@@ -256,13 +312,32 @@ def plot_pressure_crystallinity(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     fig = plt.figure(figsize=(8, 6))
 
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         plt.plot(df['Solids Mass (m.u.)'], df['Pressure (bars)'],
-                 linewidth=2, color=color, marker='o', markersize=4,
+                 linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                  alpha=0.7, label=run_name)
 
     plt.gca().invert_yaxis()
@@ -320,7 +395,26 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
         'Melt CO2 wt%'
     ]
 
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     # Calculate grid dimensions from number of oxides
     nrows = (len(oxides) + ncols - 1) // ncols
@@ -328,10 +422,10 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
     axes = axes.flatten()
 
     for i, oxide in enumerate(oxides):
-        for df, run_name, color in zip(df_list, run_names, run_colors):
+        for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
             if oxide in df.columns:
                 axes[i].plot(df[oxide], df['Melt SiO2 wt%'],
-                            linewidth=2, color=color, marker='o',
+                            linewidth=2, color=color, linestyle=style, marker='o',
                             markersize=3, alpha=0.7, label=run_name)
 
         axes[i].invert_yaxis()
@@ -366,14 +460,33 @@ def plot_solids_mass(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
     # Left panel: solid mass vs temperature
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[0].plot(df['Temperature (deg C)'], df['Solids Mass (m.u.)'],
-                     linewidth=2, color=color, marker='o', markersize=4,
+                     linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                      alpha=0.7, label=run_name)
 
     axes[0].set_xlabel('Temperature (°C)', fontsize=12)
@@ -383,9 +496,9 @@ def plot_solids_mass(df_list, run_names):
     axes[0].legend(fontsize=10)
 
     # Right panel: solid mass vs pressure
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[1].plot(df['Solids Mass (m.u.)'], df['Pressure (bars)'],
-                     linewidth=2, color=color, marker='o', markersize=4,
+                     linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                      alpha=0.7, label=run_name)
 
     axes[1].invert_yaxis()
@@ -416,7 +529,8 @@ def parse_melts_out(filepath):
                         'Temperature (deg C)', 'Pressure (kbars)', 'Pressure (bars)',
                         'Feldspar Albite (mol%)', 'Feldspar Anorthite (mol%)',
                         'Feldspar Sanidine (mol%)', 'Fluid Volume (cc)',
-                        'System Volume (cc)', 'Fluid Volume Fraction'
+                        'System Volume (cc)', 'Fluid Volume Fraction',
+                        'System Density (gm/cc)'
     """
     import re
 
@@ -466,6 +580,12 @@ def parse_melts_out(filepath):
         # Calculate fluid volume fraction -- None if fluid is not a stable phase
         fluid_vol_fraction = (fluid_V / system_V) if (fluid_V is not None and system_V is not None) else None
 
+        # Extract system density
+        system_density = None
+        density_match = re.search(r'System\s+mass.*?density\s*=\s*([\d.]+)\s*\(gm/cc\)', block, re.DOTALL)
+        if density_match:
+            system_density = float(density_match.group(1))
+
         records.append({
             'Temperature (deg C)': T,
             'Pressure (kbars)': P_kbar,
@@ -476,12 +596,14 @@ def parse_melts_out(filepath):
             'Fluid Volume (cc)': fluid_V,
             'System Volume (cc)': system_V,
             'Fluid Volume Fraction': fluid_vol_fraction,
+            'System Density (gm/cc)': system_density,
         })
 
     df = pd.DataFrame(records)
     # Drop duplicate pressure steps, keeping the last
     df = df.drop_duplicates(subset='Pressure (bars)', keep='last').reset_index(drop=True)
     return df
+
 # ============================================================
 # function to load melts.out
 # ============================================================
@@ -514,16 +636,33 @@ def plot_anorthite_vs_pressure(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['red', 'gold', 'seagreen', 'cyan', 'purple',
-                  'pink', 'lime', 'dodgerblue']
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     fig = plt.figure(figsize=(8, 6))
 
-    for df, run_name, color in zip(df_list, run_names, run_colors):
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         # Drop rows where feldspar is not a stable phase
         df_feld = df.dropna(subset=['Feldspar Anorthite (mol%)'])
         plt.plot(df_feld['Feldspar Anorthite (mol%)'], df_feld['Pressure (bars)'],
-                 linewidth=2, color=color, marker='o', markersize=4,
+                 linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
                  alpha=0.7, label=run_name)
 
     plt.gca().invert_yaxis()
@@ -535,7 +674,9 @@ def plot_anorthite_vs_pressure(df_list, run_names):
     plt.tight_layout()
     return fig
 
-
+# ============================================================
+# function to plot fluid volume fraction
+# ============================================================
 
 def plot_fluid_volume_fraction(df_list, run_names):
     """
@@ -549,21 +690,279 @@ def plot_fluid_volume_fraction(df_list, run_names):
     Returns:
         fig (Figure): Matplotlib figure object.
     """
-    run_colors = ['blue', 'orange', 'green', 'red', 'purple']
-    run_styles = [(1, 0), (5, 2), (5, 2, 1, 2), (1, 2)]
+    run_colors = [
+    '#e6194b',  # red          - 33
+    '#f58231',  # orange       - C100
+    '#ffe119',  # yellow       - D100
+    '#3cb44b',  # green        - P100
+    '#4363d8',  # blue         - 33_FC
+    '#911eb4',  # purple       - C100_FC
+    '#42d4f4',  # cyan         - D100_FC
+    '#f032e6',  # magenta      - P100_FC
+    ]
+        
+    run_styles = [
+    (0, (3, 5, 1, 5)),
+    (0, (3, 10, 1, 10)),
+    (0, (3, 10, 1, 10, 1, 10)),
+    (0, (5, 1)),
+    (0, (1, 10)),
+    (0, (1, 5)),
+    (0, (5, 5)),
+    (0, (3, 1, 1, 1)),]
 
     fig = plt.figure(figsize=(8, 6))
 
     for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         df_fluid = df.dropna(subset=['Fluid Volume Fraction'])
         plt.plot(df_fluid['Fluid Volume Fraction'], df_fluid['Pressure (bars)'],
-                 linewidth=2, color=color, dashes=style,
+                 linewidth=2, color=color, linestyle=style,
                  marker='o', markersize=4, alpha=0.7, label=run_name)
 
     plt.gca().invert_yaxis()
     plt.xlabel('Fluid Volume Fraction', fontsize=12)
     plt.ylabel('Pressure (bars)', fontsize=12)
     plt.title('Fluid Volume Fraction vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+
+# ============================================================
+# function to plot SiO2 vs pressure
+# ============================================================
+def plot_silica_vs_pressure(df_list, run_names):
+    """
+    Plots melt SiO2 content vs pressure for one or more runs.
+
+    Args:
+        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        plt.plot(df['Melt SiO2 wt%'], df['Pressure (bars)'],
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('SiO2 (wt%)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('SiO2 vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+# ============================================================
+# function to plot MgO vs pressure
+# ============================================================
+def plot_mgo_vs_pressure(df_list, run_names):
+    """
+    Plots melt MgO content vs pressure for one or more runs.
+
+    Args:
+        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        plt.plot(df['Melt MgO wt%'], df['Pressure (bars)'],
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('MgO (wt%)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('MgO vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+# ============================================================
+# function to plot total iron vs pressure
+# ============================================================
+def plot_iron_vs_pressure(df_list, run_names):
+    """
+    Plots total melt iron (FeO + Fe2O3) vs pressure for one or more runs.
+    FeO and Fe2O3 are summed per row to give total iron as wt%.
+
+    Args:
+        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        # Sum FeO and Fe2O3 for total iron
+        total_iron = df['Melt FeO wt%'] + df['Melt Fe2O3 wt%']
+        plt.plot(total_iron, df['Pressure (bars)'],
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('Total Iron as FeO + Fe2O3 (wt%)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('Total Iron vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+# ============================================================
+# function to plot fluid volume vs pressure
+# ============================================================
+def plot_fluid_volume_vs_pressure(df_list, run_names):
+    """
+    Plots fluid volume vs pressure for one or more runs.
+    Steps where fluid is not a stable phase are automatically excluded.
+
+    Args:
+        df_list (list of DataFrame): List of DataFrames from load_melts_out.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        df_fluid = df.dropna(subset=['Fluid Volume (cc)'])
+        plt.plot(df_fluid['Fluid Volume (cc)'], df_fluid['Pressure (bars)'],
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('Fluid Volume (cc)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('Fluid Volume vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+# ============================================================
+# function to plot system volume vs pressure
+# ============================================================
+def plot_system_volume_vs_pressure(df_list, run_names):
+    """
+    Plots system volume vs pressure for one or more runs.
+
+    Args:
+        df_list (list of DataFrame): List of DataFrames from load_melts_out.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        plt.plot(df['System Volume (cc)'], df['Pressure (bars)'],
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('System Volume (cc)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('System Volume vs Pressure', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+# ============================================================
+# function to plot system density vs pressure
+# ============================================================
+def plot_density_vs_pressure(df_list, run_names):
+    """
+    Plots system density vs pressure for one or more runs.
+
+    Args:
+        df_list (list of DataFrame): List of DataFrames from load_melts_out.
+        run_names (list of str): Run name labels corresponding to each DataFrame.
+
+    Returns:
+        fig (Figure): Matplotlib figure object.
+    """
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        plt.plot(df['System Density (gm/cc)'], df['Pressure (bars)'],
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
+
+    plt.gca().invert_yaxis()
+    plt.xlabel('System Density (gm/cc)', fontsize=12)
+    plt.ylabel('Pressure (bars)', fontsize=12)
+    plt.title('System Density vs Pressure', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3, linestyle='--')
     plt.legend(fontsize=10)
     plt.tight_layout()
