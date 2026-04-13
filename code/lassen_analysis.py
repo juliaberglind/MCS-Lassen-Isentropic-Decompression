@@ -4,21 +4,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
+import seaborn as sns
 
 # ============================================================
 # load the data
 # ============================================================
 def load_run_data(run_name):
-    """
-    Loads eruption and summary data from Excel file.
-
-    Args:
-        run_name (str): Name of the run (e.g. '33', 'C100'). Used to build the file path.
-
-    Returns:
-        df_eruptions (DataFrame): Eruptions Open sheet data, with header rows skipped.
-        df_summary (DataFrame): RunSummary sheet data.
-    """
     path = f'../Runs/Lassen_{run_name}.XLSX'
 
     df_eruptions = pd.read_excel(path, sheet_name='Eruptions Open', skiprows=[1, 2])
@@ -30,25 +22,14 @@ def load_run_data(run_name):
 # clean the set tp duplicates in the eruptions tab
 # ============================================================
 def clean_settp_duplicates(df):
-    """
-    Removes duplicate 'SetTP' rows from a DataFrame, keeping the first row always.
-
-    Args:
-        df (DataFrame): Raw DataFrame from load_run_data.
-
-    Returns:
-        df_cleaned (DataFrame): DataFrame with SetTP duplicate rows removed.
-    """
     if df.index.name:
-        # if the index is named, check the index for SetTP strings
         mask = ~(df.index.astype(str).str.contains('SetTP', na=False))
         mask.iloc[0] = True  # always keep the first row regardless
         df_cleaned = df[mask]
     else:
-        # Otherwise check the first column for SetTP strings
         first_col = df.columns[0]
         mask = ~(df[first_col].astype(str).str.contains('SetTP', na=False))
-        mask.iloc[0] = True  # always keep the first row regardless
+        mask.iloc[0] = True
         df_cleaned = df[mask]
 
     return df_cleaned
@@ -57,19 +38,6 @@ def clean_settp_duplicates(df):
 # function to add anhydrous columns to the df
 # ============================================================
 def add_anhydrous_columns(df):
-    """
-    Adds anhydrous-normalized oxide columns to a DataFrame.
-    Each oxide is divided by the sum of all non-volatile oxides and multiplied
-    by 100, removing the dilution effect of H2O and CO2.
-    New columns are added with the suffix '_anhy' (e.g. 'Melt SiO2_anhy wt%').
-    H2O and CO2 are excluded from normalization but kept as-is for separate plotting.
-
-    Args:
-        df (DataFrame): Eruption DataFrame from load_run_data.
-
-    Returns:
-        df (DataFrame): Copy of input DataFrame with additional _anhy columns appended.
-    """
     # Non-volatile oxides to normalize
     oxides = [
         'Melt SiO2 wt%', 'Melt TiO2 wt%', 'Melt Al2O3 wt%',
@@ -79,13 +47,11 @@ def add_anhydrous_columns(df):
         'Melt K2O wt%', 'Melt P2O5 wt%'
     ]
 
-    # Only normalize oxides that actually exist in this DataFrame
     present_oxides = [col for col in oxides if col in df.columns]
 
-    # Sum of all non-volatile oxides per row (the anhydrous denominator)
     anhydrous_sum = df[present_oxides].sum(axis=1)
 
-    df = df.copy()  # avoid mutating the original DataFrame
+    df = df.copy()
     for col in present_oxides:
         anhy_col = col.replace(' wt%', '_anhy wt%')
         df[anhy_col] = (df[col] / anhydrous_sum) * 100
@@ -96,20 +62,6 @@ def add_anhydrous_columns(df):
 # function to plot oxides vs pressure
 # ============================================================
 def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
-    """
-    Plots all melt oxide compositions vs pressure for one or more runs on a grid of subplots.
-    Can plot either raw (hydrous) or anhydrous-normalized oxide values.
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-        ncols (int): Number of columns in the subplot grid. Default is 4.
-        anhydrous (bool): If True, plots anhydrous-normalized oxides (H2O and CO2 excluded
-                          from normalization sum). H2O is still plotted raw. Default is False.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     if anhydrous:
         df_list = [add_anhydrous_columns(df) for df in df_list]
         oxides = [
@@ -132,14 +84,14 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
         title = 'Oxide Evolution'
 
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119',
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4', 
+    '#f032e6',
     ]
 
     run_styles = [
@@ -152,7 +104,7 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
     (0, (5, 5)),
     (0, (3, 1, 1, 1)),]
 
-    # Calculate grid dimensions from number of oxides
+    # calculate grid dimensions from number of oxides
     nrows = (len(oxides) + ncols - 1) // ncols
     fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
     axes = axes.flatten()
@@ -165,7 +117,6 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
                             markersize=3, alpha=0.7, label=run_name)
 
         axes[i].invert_yaxis()
-        # Strip 'Melt' prefix and 'wt%' suffix for cleaner axis labels
         oxide_name = oxide.replace('Melt ', '').replace(' wt%', '')
         axes[i].set_xlabel(f'{oxide_name} (wt%)', fontsize=11)
         axes[i].set_ylabel('Pressure (bars)', fontsize=11)
@@ -173,7 +124,6 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
         axes[i].grid(True, alpha=0.3, linestyle='--')
         axes[i].legend(fontsize=8, loc='best')
 
-    # Hide any unused subplot panels
     for i in range(len(oxides), len(axes)):
         axes[i].axis('off')
 
@@ -185,26 +135,17 @@ def plot_all_oxides_vs_pressure(df_list, run_names, ncols=4, anhydrous=False):
 # function to plot temperature vs pressure
 # ============================================================
 def plot_temperature_vs_pressure(df_list, run_names):
-    """
-    Plots temperature vs pressure for one or more runs on a single figure.
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
+    
     run_styles = [
     (0, (3, 5, 1, 5)),
     (0, (3, 10, 1, 10)),
@@ -235,26 +176,15 @@ def plot_temperature_vs_pressure(df_list, run_names):
 # function to plot fluid mass versus temperature and pressure
 # ============================================================
 def plot_fluid_mass(df_list, run_names):
-    """
-    Plots fluid mass evolution for one or more runs as two side-by-side subplots:
-    fluid mass vs temperature (left) and fluid mass vs pressure (right).
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
 
     run_styles = [
@@ -269,7 +199,6 @@ def plot_fluid_mass(df_list, run_names):
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
-    # Left panel: fluid mass vs temperature
     for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[0].plot(df['Temperature (deg C)'], df['fluid Mass (m.u.)'],
                      linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
@@ -281,7 +210,6 @@ def plot_fluid_mass(df_list, run_names):
     axes[0].grid(True, alpha=0.3, linestyle='--')
     axes[0].legend(fontsize=10)
 
-    # Right panel: fluid mass vs pressure
     for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[1].plot(df['fluid Mass (m.u.)'], df['Pressure (bars)'],
                      linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
@@ -302,25 +230,15 @@ def plot_fluid_mass(df_list, run_names):
 # function to plot crystallinity versus pressure
 # ============================================================
 def plot_pressure_crystallinity(df_list, run_names):
-    """
-    Plots solid mass vs pressure for one or more runs.
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
 
     run_styles = [
@@ -353,18 +271,6 @@ def plot_pressure_crystallinity(df_list, run_names):
 # function to save a figure
 # ============================================================
 def save_fig(fig, file_name, path='../figures'):
-    """
-    Saves a matplotlib figure as a PNG to the specified directory.
-
-    Args:
-        fig (Figure): Matplotlib figure object to save.
-        file_name (str): Output filename. '.png' extension is added if not present.
-        path (str): Directory to save the figure in. Default is '../figures'.
-
-    Returns:
-        None
-    """
-    # Append .png extension if not already present
     if not file_name.endswith('.png'):
         file_name += '.png'
 
@@ -375,17 +281,6 @@ def save_fig(fig, file_name, path='../figures'):
 # function to plot oxides versus silica
 # ============================================================
 def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
-    """
-    Plots all melt oxide compositions vs silica for one or more runs on a grid of subplots. 
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-        ncols (int): Number of columns in the subplot grid. Default is 4.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     oxides = [
         'Melt SiO2 wt%', 'Melt TiO2 wt%', 'Melt Al2O3 wt%',
         'Melt Fe2O3 wt%', 'Melt Cr2O3 wt%', 'Melt FeO wt%',
@@ -396,14 +291,14 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
     ]
 
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
 
     run_styles = [
@@ -416,7 +311,6 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
     (0, (5, 5)),
     (0, (3, 1, 1, 1)),]
 
-    # Calculate grid dimensions from number of oxides
     nrows = (len(oxides) + ncols - 1) // ncols
     fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
     axes = axes.flatten()
@@ -429,7 +323,6 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
                             markersize=3, alpha=0.7, label=run_name)
 
         axes[i].invert_yaxis()
-        # Strip 'Melt' prefix and 'wt%' suffix for cleaner axis labels
         oxide_name = oxide.replace('Melt ', '').replace(' wt%', '')
         axes[i].set_xlabel(f'{oxide_name} (wt%)', fontsize=11)
         axes[i].set_ylabel('Silica (wt%)', fontsize=11)
@@ -437,7 +330,6 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
         axes[i].grid(True, alpha=0.3, linestyle='--')
         axes[i].legend(fontsize=8, loc='best')
 
-    # Hide any unused subplot panels
     for i in range(len(oxides), len(axes)):
         axes[i].axis('off')
 
@@ -449,26 +341,15 @@ def plot_all_oxides_vs_silica(df_list, run_names, ncols=4):
 # function to plot solids mass versus temperature and pressure
 # ============================================================
 def plot_solids_mass(df_list, run_names):
-    """
-    Plots solid mass evolution for one or more runs as two side-by-side subplots:
-    solid mass vs temperature (left) and solid mass vs pressure (right).
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
 
     run_styles = [
@@ -483,7 +364,6 @@ def plot_solids_mass(df_list, run_names):
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
-    # Left panel: solid mass vs temperature
     for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[0].plot(df['Temperature (deg C)'], df['Solids Mass (m.u.)'],
                      linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
@@ -495,7 +375,6 @@ def plot_solids_mass(df_list, run_names):
     axes[0].grid(True, alpha=0.3, linestyle='--')
     axes[0].legend(fontsize=10)
 
-    # Right panel: solid mass vs pressure
     for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
         axes[1].plot(df['Solids Mass (m.u.)'], df['Pressure (bars)'],
                      linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
@@ -516,43 +395,26 @@ def plot_solids_mass(df_list, run_names):
 # function to parse through melts.out files
 # ============================================================
 def parse_melts_out(filepath):
-    """
-    Parses a MELTS .out file and extracts temperature, pressure, feldspar
-    end-member compositions, and fluid volume fraction for each pressure step.
-    Rows without feldspar or fluid present will have NaN for those columns.
-
-    Args:
-        filepath (str): Path to the MELTS .out file.
-
-    Returns:
-        df (DataFrame): One row per pressure step with columns:
-                        'Temperature (deg C)', 'Pressure (kbars)', 'Pressure (bars)',
-                        'Feldspar Albite (mol%)', 'Feldspar Anorthite (mol%)',
-                        'Feldspar Sanidine (mol%)', 'Fluid Volume (cc)',
-                        'System Volume (cc)', 'Fluid Volume Fraction',
-                        'System Density (gm/cc)'
-    """
     import re
 
     with open(filepath, 'r') as f:
         content = f.read()
 
-    # Each pressure step is separated by this delimiter
     blocks = content.split('**********----------**********')
 
     records = []
     for block in blocks:
 
-        # Extract temperature and pressure from block header
+        # extract temperature and pressure from block header
         tp_match = re.search(r'T\s*=\s*([\d.]+)\s*\(C\).*?P\s*=\s*([\d.]+)\s*\(kbars\)', block)
         if not tp_match:
             continue
 
         T = float(tp_match.group(1))
         P_kbar = float(tp_match.group(2))
-        P_bar = P_kbar * 1000  # convert to bars to match xlsx DataFrames
+        P_bar = P_kbar * 1000  # convert to bars
 
-        # Extract feldspar end-members -- will be None if feldspar is not a stable phase
+        # extract feldspar end-members
         albite = None
         anorthite = None
         sanidine = None
@@ -565,22 +427,22 @@ def parse_melts_out(filepath):
             anorthite = float(feldspar_match.group(2))
             sanidine = float(feldspar_match.group(3))
 
-        # Extract fluid volume if fluid is a stable phase
+        # extract fluid volume if fluid is a stable phase
         fluid_V = None
         fluid_match = re.search(r'fluid\s+mass.*?V\s*=\s*([\d.]+)\s*\(cc\)', block, re.DOTALL)
         if fluid_match:
             fluid_V = float(fluid_match.group(1))
 
-        # Extract system volume
+        # extract system volume
         system_V = None
         system_match = re.search(r'System\s+mass.*?V\s*=\s*([\d.]+)\s*\(cc\)', block, re.DOTALL)
         if system_match:
             system_V = float(system_match.group(1))
 
-        # Calculate fluid volume fraction -- None if fluid is not a stable phase
+        # calculate fluid volume fraction
         fluid_vol_fraction = (fluid_V / system_V) if (fluid_V is not None and system_V is not None) else None
 
-        # Extract system density
+        # extract system density
         system_density = None
         density_match = re.search(r'System\s+mass.*?density\s*=\s*([\d.]+)\s*\(gm/cc\)', block, re.DOTALL)
         if density_match:
@@ -600,7 +462,6 @@ def parse_melts_out(filepath):
         })
 
     df = pd.DataFrame(records)
-    # Drop duplicate pressure steps, keeping the last
     df = df.drop_duplicates(subset='Pressure (bars)', keep='last').reset_index(drop=True)
     return df
 
@@ -608,69 +469,52 @@ def parse_melts_out(filepath):
 # function to load melts.out
 # ============================================================
 def load_melts_out(melts_name):
-    """
-    Loads and parses a MELTS .out file for a given run from the tbl-files directory.
-
-    Args:
-        melts_name (str): Name of the run folder (e.g. '33', 'C100', 'D100', 'P100').
-
-    Returns:
-        df (DataFrame): Parsed output from parse_melts_out with temperature, pressure,
-                        and feldspar end-member compositions.
-    """
     path = f'../runs/tbl-files/{melts_name}/melts.out'
     return parse_melts_out(path)
 
-# ============================================================
-# function to plot anorthite versus pressure
-# ============================================================
 def plot_anorthite_vs_pressure(df_list, run_names):
-    """
-    Plots feldspar anorthite content vs pressure for one or more runs.
-    Steps where feldspar is not a stable phase are automatically excluded.
-
-    Args:
-        df_list (list of DataFrame): List of DataFrames from load_melts_out.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
     run_styles = [
-    (0, (3, 5, 1, 5)),
-    (0, (3, 10, 1, 10)),
-    (0, (3, 10, 1, 10, 1, 10)),
-    (0, (5, 1)),
-    (0, (1, 10)),
-    (0, (1, 5)),
-    (0, (5, 5)),
-    (0, (3, 1, 1, 1)),]
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    # observed anorthite range
+    SALISBURY_MIN = 29.4
+    SALISBURY_MAX = 70.7
 
     fig = plt.figure(figsize=(8, 6))
 
+    plt.axvspan(SALISBURY_MIN, SALISBURY_MAX,
+                alpha=0.12, color='gray',
+                label='Salisbury et al. observed range')
+
+    plt.axvline(SALISBURY_MIN, color='gray', linewidth=0.8,
+                linestyle='--', alpha=0.6)
+    plt.axvline(SALISBURY_MAX, color='gray', linewidth=0.8,
+                linestyle='--', alpha=0.6)
+
     for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
-        # Drop rows where feldspar is not a stable phase
         df_feld = df.dropna(subset=['Feldspar Anorthite (mol%)'])
         plt.plot(df_feld['Feldspar Anorthite (mol%)'], df_feld['Pressure (bars)'],
-                 linewidth=2, color=color, linestyle=style, marker='o', markersize=4,
-                 alpha=0.7, label=run_name)
+                 linewidth=2, color=color, linestyle=style, marker='o',
+                 markersize=4, alpha=0.7, label=run_name)
 
     plt.gca().invert_yaxis()
     plt.xlabel('Anorthite (mol%)', fontsize=12)
     plt.ylabel('Pressure (bars)', fontsize=12)
     plt.title('Feldspar Anorthite vs Pressure', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3, linestyle='--')
-    plt.legend(fontsize=10)
+    plt.legend(fontsize=9)
     plt.tight_layout()
     return fig
 
@@ -679,26 +523,15 @@ def plot_anorthite_vs_pressure(df_list, run_names):
 # ============================================================
 
 def plot_fluid_volume_fraction(df_list, run_names):
-    """
-    Plots fluid volume fraction vs pressure for one or more runs.
-    Only plots steps where fluid is a stable phase (below ~1500 bars).
-
-    Args:
-        df_list (list of DataFrame): List of DataFrames from load_melts_out.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-    '#e6194b',  # red          - 33
-    '#f58231',  # orange       - C100
-    '#ffe119',  # yellow       - D100
-    '#3cb44b',  # green        - P100
-    '#4363d8',  # blue         - 33_FC
-    '#911eb4',  # purple       - C100_FC
-    '#42d4f4',  # cyan         - D100_FC
-    '#f032e6',  # magenta      - P100_FC
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
         
     run_styles = [
@@ -733,20 +566,17 @@ def plot_fluid_volume_fraction(df_list, run_names):
 # function to plot SiO2 vs pressure
 # ============================================================
 def plot_silica_vs_pressure(df_list, run_names):
-    """
-    Plots melt SiO2 content vs pressure for one or more runs.
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
-        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
+    
     run_styles = [
         (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
         (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
@@ -772,19 +602,15 @@ def plot_silica_vs_pressure(df_list, run_names):
 # function to plot MgO vs pressure
 # ============================================================
 def plot_mgo_vs_pressure(df_list, run_names):
-    """
-    Plots melt MgO content vs pressure for one or more runs.
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
-        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
     run_styles = [
         (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
@@ -811,24 +637,15 @@ def plot_mgo_vs_pressure(df_list, run_names):
 # function to plot total iron vs pressure
 # ============================================================
 def plot_iron_vs_pressure(df_list, run_names):
-    """
-    Plots total melt iron (FeO + Fe2O3) vs pressure for one or more runs.
-    FeO and Fe2O3 are summed per row to give total iron as wt%.
-
-    Args:
-        df_list (list of DataFrame): List of eruption DataFrames from load_run_data.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
-        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
-    ]
-    run_styles = [
-        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
-        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
 
     fig = plt.figure(figsize=(8, 6))
@@ -853,20 +670,15 @@ def plot_iron_vs_pressure(df_list, run_names):
 # function to plot fluid volume vs pressure
 # ============================================================
 def plot_fluid_volume_vs_pressure(df_list, run_names):
-    """
-    Plots fluid volume vs pressure for one or more runs.
-    Steps where fluid is not a stable phase are automatically excluded.
-
-    Args:
-        df_list (list of DataFrame): List of DataFrames from load_melts_out.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
-        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
-        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    '#e6194b',
+    '#f58231',
+    '#ffe119', 
+    '#3cb44b',
+    '#4363d8',
+    '#911eb4',
+    '#42d4f4',
+    '#f032e6',
     ]
     run_styles = [
         (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
@@ -894,16 +706,6 @@ def plot_fluid_volume_vs_pressure(df_list, run_names):
 # function to plot system volume vs pressure
 # ============================================================
 def plot_system_volume_vs_pressure(df_list, run_names):
-    """
-    Plots system volume vs pressure for one or more runs.
-
-    Args:
-        df_list (list of DataFrame): List of DataFrames from load_melts_out.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
         '#e6194b', '#f58231', '#ffe119', '#3cb44b',
         '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
@@ -933,16 +735,6 @@ def plot_system_volume_vs_pressure(df_list, run_names):
 # function to plot system density vs pressure
 # ============================================================
 def plot_density_vs_pressure(df_list, run_names):
-    """
-    Plots system density vs pressure for one or more runs.
-
-    Args:
-        df_list (list of DataFrame): List of DataFrames from load_melts_out.
-        run_names (list of str): Run name labels corresponding to each DataFrame.
-
-    Returns:
-        fig (Figure): Matplotlib figure object.
-    """
     run_colors = [
         '#e6194b', '#f58231', '#ffe119', '#3cb44b',
         '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
@@ -965,5 +757,74 @@ def plot_density_vs_pressure(df_list, run_names):
     plt.title('System Density vs Pressure', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3, linestyle='--')
     plt.legend(fontsize=10)
+    plt.tight_layout()
+    return fig
+
+# ============================================================
+# function to plot system fluid volume fraction and density vs pressure
+# ============================================================
+def plot_foam_signature(df_list, run_names):
+    run_colors = [
+        '#e6194b', '#f58231', '#ffe119', '#3cb44b',
+        '#4363d8', '#911eb4', '#42d4f4', '#f032e6',
+    ]
+    run_styles = [
+        (0, (3, 5, 1, 5)), (0, (3, 10, 1, 10)), (0, (3, 10, 1, 10, 1, 10)),
+        (0, (5, 1)), (0, (1, 10)), (0, (1, 5)), (0, (5, 5)), (0, (3, 1, 1, 1)),
+    ]
+
+    fig, axes = plt.subplots(2, 1, figsize=(8, 12), sharey=True)
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        df_fluid = df.dropna(subset=['Fluid Volume Fraction'])
+        axes[0].plot(df_fluid['Fluid Volume Fraction'], df_fluid['Pressure (bars)'],
+                     linewidth=2, color=color, linestyle=style, marker='o',
+                     markersize=4, alpha=0.7, label=run_name)
+
+    axes[0].invert_yaxis()
+    axes[0].set_xlabel('Fluid Volume Fraction', fontsize=12)
+    axes[0].set_ylabel('Pressure (bars)', fontsize=12)
+    axes[0].set_title('Fluid Volume Fraction vs Pressure', fontsize=13, fontweight='bold')
+    axes[0].grid(True, alpha=0.3, linestyle='--')
+    axes[0].legend(fontsize=9)
+
+    for df, run_name, color, style in zip(df_list, run_names, run_colors, run_styles):
+        axes[1].plot(df['System Density (gm/cc)'], df['Pressure (bars)'],
+                     linewidth=2, color=color, linestyle=style, marker='o',
+                     markersize=4, alpha=0.7, label=run_name)
+
+    axes[1].set_xlabel('System Density (gm/cc)', fontsize=12)
+    axes[1].set_ylabel('Pressure (bars)', fontsize=12)
+    axes[1].set_title('System Density vs Pressure', fontsize=13, fontweight='bold')
+    axes[1].grid(True, alpha=0.3, linestyle='--')
+    axes[1].legend(fontsize=9)
+
+    fig.suptitle('Mafic Foam Signature', fontsize=15, fontweight='bold')
+    plt.tight_layout()
+    return fig
+# ============================================================
+# function to plot paramter sensitivity matrix
+# ============================================================
+def plot_sensitivity_heatmap(df_normalized, df_summary):
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    sns.heatmap(
+        df_normalized,
+        ax=ax,
+        cmap='YlOrRd',
+        linewidths=0.5,
+        linecolor='white',
+        cbar_kws={'label': 'Normalized Value', 'shrink': 0.8},
+        annot=df_normalized.round(2),
+        fmt='g',
+        annot_kws={'size': 9}
+    )
+
+    ax.set_title('Parameter Sensitivity Matrix', fontsize=14, fontweight='bold', pad=12)
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    ax.tick_params(axis='x', rotation=30, labelsize=9)
+    ax.tick_params(axis='y', rotation=0, labelsize=9)
+
     plt.tight_layout()
     return fig
